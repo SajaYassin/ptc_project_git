@@ -26,19 +26,21 @@ def print_np_array(array):
         print(num, line)
 
 
-def crop_image(image):
+def crop_image(source_image, implify_on_image=[]):
     # from: https://codereview.stackexchange.com/questions/132914/crop-black-border-of-image-using-numpy
     # Coordinates of non-black pixels.
-    (x_coord, y_coord, _) = np.where(image > 0)
+
+    (x_coord, y_coord, _) = np.where(source_image == 255)
+
     x0, x1 = x_coord.min(axis=0), x_coord.max(axis=0) + 1
     y0, y1 = y_coord.min(axis=0), y_coord.max(axis=0) + 1  # slices are exclusive at the top
 
     # Get the contents of the bounding box as an image.
-    cropped = image[x0:x1, y0:y1]
+    cropped = implify_on_image[x0:x1, y0:y1] if implify_on_image.any() else source_image[x0:x1, y0:y1]
     return cropped
 
 
-def iterate_over_slices_2(old_image, new_image, disp_x_percentage = 0.1, disp_y_percentage=0.1, epsilon=5):
+def iterate_over_slices_2(old_image, new_image, disp_x_percentage = 0.1, disp_y_percentage=0.1, epsilon=20):
     height, width = old_image.shape[:2]
     disp_x = int(disp_x_percentage*width)
     disp_y = int(disp_y_percentage*height)
@@ -59,7 +61,8 @@ def iterate_over_slices(old_image, new_image, image_slic):
 
         cv2.imshow("Mask", mask)
         bitwise_img = cv2.bitwise_and(old_image, old_image, mask=mask)
-        crop_nonblack_img = crop_image(bitwise_img)
+        # crop_nonblack_img = crop_image(bitwise_img)
+        crop_nonblack_img = bitwise_img
         '''print("BBBBBA444444444444444443333333333333")
         print("Before:", bitwise_img)
 
@@ -89,7 +92,10 @@ if __name__ == "__main__":
     # image = cv2.imread('Photos/Pls.png')
     image_old = cv2.imread('Photos/ducks_around_computer_3.png')
     image_new = cv2.imread('Photos/ducks_around_computer_2.png')
+    res = SIFT.SIFT_detector(image_new, image_old)
 
-    # sliced_image = SLIC_algo(image_old)
-    iterate_over_slices_2(image_new, image_old, disp_x_percentage=0.2, disp_y_percentage=0.1, epsilon=int(0.05* min(image_old.shape[:2])))
+    old_cropped = crop_image(res, image_old)
+    # sliced_image = SLIC_algo(image_old, False)
+    # iterate_over_slices(image_old, image_new, sliced_image)
+    iterate_over_slices_2(image_new, old_cropped, disp_x_percentage=0.2, disp_y_percentage=0.1, epsilon=int(0.05* min(image_old.shape[:2])))
 

@@ -8,7 +8,7 @@ import cv2
 from matplotlib import pyplot as plt
 
 
-MIN_MATCH_COUNT = 9
+MIN_MATCH_COUNT = 5
 
 
 def calculate_similarity_goodness(good, kp1, kp2):
@@ -35,6 +35,8 @@ def draw2(img1, kp1, img2, kp2, good, matches_mask):
 
     length = len(matches_mask) if matches_mask else 0
     good = [good[index] for index in range(0, length) if matches_mask[index]]
+    if matches_mask:
+        print("new_good/old_good = ", sum(matches_mask)*100/len(matches_mask))
     calculate_similarity_goodness(good, kp1, kp2)
 
     img3 = cv2.drawMatchesKnn(img1, kp1, img2, kp2, good, None, flags=2, singlePointColor=None)
@@ -57,6 +59,7 @@ def SIFT_detector(img1 ,img2, gamma_goodness = 0.85):
     # BFMatcher with default params
     bf = cv2.BFMatcher()
     matches = bf.knnMatch(des1, des2, k=2)
+    # matches = bf.match(des1, des2)
     # print("hahahaha", des1, matches)
     # Apply ratio test
     good = []
@@ -65,19 +68,25 @@ def SIFT_detector(img1 ,img2, gamma_goodness = 0.85):
         # print(m.distance,n.distance)
         if m.distance < gamma_goodness*n.distance:
             good.append([m])
-
     # draw1(img1, kp1, img2, kp2, good)
 
-    matches_mask, img_with_objects = find_objects(matches, kp1 ,kp2, img1, img2)
-    draw2(img1, kp1, img_with_objects, kp2, matches, matches_mask)
     output = None
-    cv2.imshow("Keypoints", cv2.drawKeypoints(img2, kp2, output))
+    cv2.imshow("Keypoints1", cv2.drawKeypoints(img1, kp1, output))
+    output = None
+    cv2.imshow("Keypoints2", cv2.drawKeypoints(img2, kp2, output))
+
+    matches_mask, img_with_objects = find_objects(good, kp1 ,kp2, img1, img2)
+    draw2(img1, kp1, img_with_objects, kp2, good, matches_mask)
+
+
+
+    return img_with_objects
 
 
 
 def find_objects(good, kp1 , kp2, img1, img2):
-    #if len(good) > MIN_MATCH_COUNT:
-    if calculate_similarity_goodness(good, kp1, kp2) > 0.1:
+    if len(good) > MIN_MATCH_COUNT:
+    # if calculate_similarity_goodness(good, kp1, kp2) > 0.1:
         src_pts = np.float32([kp1[m[0].queryIdx].pt for m in good]).reshape(-1, 1, 2)
         dst_pts = np.float32([kp2[m[0].trainIdx].pt for m in good]).reshape(-1, 1, 2)
 

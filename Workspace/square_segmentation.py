@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import cv2
 import skimage.segmentation as seg
 import using_Sift as SIFT
+from using_Sift import step_size
 
 
 def slic_squares(image, n_segments=100):
@@ -10,13 +11,8 @@ def slic_squares(image, n_segments=100):
     return seg.slic(squares_array, n_segments=n_segments)
 
 
-
-
 def number_of_segments(image):
     return image.size//(10**(len(str(image.size))*0.8))
-
-
-
 
 
 def print_np_array(array):
@@ -61,10 +57,24 @@ def iterate_over_slices_2(old_image, new_image, output, disp_x_percentage=0.1, d
 
             is_match, similarity = SIFT.SIFT_detector_on_segments(cropped_old, cropped_new)
             if not is_match:
-                print("X:", x, "Y:", y, "similarity:", similarity)
-                convert_color_scale(output[y : y + disp_y, x : x + disp_x], 'Blue')
+                is_match, similarity = SIFT.SIFT_detector_on_segments(cropped_old, cropped_new, is_dense=False)
+                if not is_match:
+                    print("X:", x, "Y:", y, "similarity:", similarity)
+                    convert_color_scale(output[y : y + disp_y, x : x + disp_x], 'Blue')
             # cv2.imshow('Modified_Old', old_image)
 
+
+def plot_changes_dense_sift(img, source_points):
+    height, width = img.shape[:2]
+    '''for y in range(0, height, step_size*2):
+        for x in range(0, width, step_size*2):
+            if()
+    '''
+    for x, y in source_points:
+        x, y = int(x), int(y)
+        cropped = img[y: min(height, y + step_size),
+                      x: min(width, x + step_size)]
+        convert_color_scale(cropped, 'Green')
 
 
 def iterate_over_slices(old_image, new_image, image_slic):
@@ -102,31 +112,42 @@ def SLIC_algo(image, squares=True):
 def plot_colored_changes(img1, img2, output):
     # sliced_image = SLIC_algo(img1, False)
     # iterate_over_slices(img1, img2, sliced_image)
-    iterate_over_slices_2(img1, img2, disp_x_percentage=0.08, disp_y_percentage=0.2, epsilon=int(0.05 * min(img2.shape[:2])), output=output)
+    iterate_over_slices_2(img1, img2, disp_x_percentage=0.2, disp_y_percentage=0.2, epsilon=int(0.05 * min(img2.shape[:2])), output=output)
 
+
+
+
+
+def my_main(old_img_path, new_img_path):
+    image_old = cv2.imread(old_img_path)
+    image_new = cv2.imread(new_img_path)
+    res, source_points = SIFT.SIFT_detector(image_new, image_old)
+
+    # old_cropped = crop_image(res, image_old)
+
+    colored_image = image_new.copy()
+    plot_changes_dense_sift(colored_image, source_points)
+    plt.imshow(colored_image), plt.title("Colored"), plt.show()
+    '''
+    # plot_colored_changes(img1=image_new, img2=old_cropped, output=colored_image)
+    # plt.imshow(colored_image), plt.title("Colored"), plt.show()
+
+    image_old = cv2.imread(old_img_path)
+    image_new = cv2.imread(new_img_path)
+    res, source_points = SIFT.SIFT_detector(image_old, image_new)
+
+    # new_cropped = crop_image(res, image_new)
+    # plot_colored_changes(img1=image_old, img2=new_cropped, output=colored_image)
+    plot_changes_dense_sift(colored_image, source_points)
+    plt.imshow(colored_image), plt.title("Colored"), plt.show()
+    '''
 
 
 if __name__ == "__main__":
     # We want to differentiate between the old image and the current status.
     # Therefore: slice the original image and iterate over the slices with the new image.
-    # image = cv2.imread('Photos/Pls.png')
-    image_old = cv2.imread('Photos/no_marwan.png')
-    image_new = cv2.imread('Photos/marwan.png')
-    res = SIFT.SIFT_detector(image_new, image_old)
-
-    old_cropped = crop_image(res, image_old)
-
-    colored_image = image_new.copy()
-    plot_colored_changes(img1=image_new, img2=old_cropped, output=colored_image)
-    #plt.imshow(colored_image), plt.title("Colored"), plt.show()
-
-
-    image_old = cv2.imread('Photos/no_marwan.png')
-    image_new = cv2.imread('Photos/marwan.png')
-    res = SIFT.SIFT_detector(image_new, image_old)
-
-    new_cropped = crop_image(res, image_new)
-    plot_colored_changes(img1=image_old, img2=new_cropped, output=colored_image)
-    plt.imshow(colored_image), plt.title("Colored"), plt.show()
-
-
+    # image = cv2.imread('Photos/Possible.jpg')
+    # my_main(old_img_path='Photos/empty_mech.png', new_img_path='Photos/marwan.png')
+    # my_main(old_img_path='Photos/empty_mech.png', new_img_path='Photos/saja_mech.png')
+    # my_main(old_img_path='Photos/no_marwan.png', new_img_path='Photos/marwan.png')
+    my_main(old_img_path='Photos/office_real.png', new_img_path='Photos/office_synth.png')

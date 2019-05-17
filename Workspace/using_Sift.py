@@ -9,8 +9,9 @@ from matplotlib import pyplot as plt
 
 
 MIN_MATCH_COUNT = 3
-MIN_KEY_POINTS = 15
-MATCH_THRESHOLD = 16
+MIN_KEY_POINTS = 4
+MATCH_THRESHOLD = 15
+step_size=20
 
 
 def calculate_similarity_goodness(good, kp1, kp2):
@@ -43,6 +44,27 @@ def draw2(img1, kp1, img2, kp2, good, matches_mask):
 
     plt.imshow(img3)
     plt.show()
+    return good
+
+
+
+def dense_sift(image):
+    # img = cv2.imread(image_path)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    sift = cv2.xfeatures2d.SIFT_create()
+
+    kp = [cv2.KeyPoint(x, y, step_size) for y in range(0, gray.shape[0], step_size)
+          for x in range(0, gray.shape[1], step_size)]
+
+    #img = cv2.drawKeypoints(gray, kp, img)
+
+    #plt.figure(figsize=(20, 10))
+    #plt.imshow(img)
+    #plt.show()
+
+    kp, des = sift.compute(gray, kp)
+    return kp, des
 
 
 def SIFT_detector(img1 ,img2, gamma_goodness = 0.85):
@@ -51,9 +73,13 @@ def SIFT_detector(img1 ,img2, gamma_goodness = 0.85):
     # Initiate SIFT detector
     sift = cv2.xfeatures2d.SIFT_create()
 
+
     # find the keypoints and descriptors with SIFT
-    kp1, des1 = sift.detectAndCompute(img1,None)
-    kp2, des2 = sift.detectAndCompute(img2,None)
+    # kp1, des1 = sift.detectAndCompute(img1,None)
+    # kp2, des2 = sift.detectAndCompute(img2,None)
+
+    kp1, des1 = dense_sift(img1)
+    kp2, des2 = dense_sift(img2)
 
     # BFMatcher with default params
     bf = cv2.BFMatcher()
@@ -70,22 +96,27 @@ def SIFT_detector(img1 ,img2, gamma_goodness = 0.85):
     # draw1(img1, kp1, img2, kp2, good)
 
     matches_mask, img_with_objects = find_objects(good, kp1 ,kp2, img1, img2)
-    draw2(img1, kp1, img_with_objects, kp2, good, matches_mask)
+    masked_good = draw2(img1, kp1, img_with_objects, kp2, good, matches_mask)
+    src_pts = [kp1[m[0].queryIdx].pt for m in masked_good]
 
-    return img_with_objects
+    return img_with_objects, src_pts
 
 
 
-
-def SIFT_detector_on_segments(img1 ,img2, gamma_goodness = 0.8):
+def SIFT_detector_on_segments(img1 ,img2, gamma_goodness = 0.8, is_dense=True):
     # img1 size must be not smaller than img2
 
     # Initiate SIFT detector
     sift = cv2.xfeatures2d.SIFT_create()
 
     # find the keypoints and descriptors with SIFT
-    kp1, des1 = sift.detectAndCompute(img1,None)
-    kp2, des2 = sift.detectAndCompute(img2,None)
+    if(is_dense):
+        kp1, des1 = dense_sift(img1)
+        kp2, des2 = dense_sift(img2)
+    else:
+        kp1, des1 = sift.detectAndCompute(img1,None)
+        kp2, des2 = sift.detectAndCompute(img2,None)
+
     if not (kp1 and kp2):
         return False, 0
     # BFMatcher with default params
@@ -152,4 +183,5 @@ if __name__ == "__main__":
 
     img2 = cv2.imread('Photos/Pls.png', 0)  # trainImage
     img1 = cv2.imread('Photos/first_slice.png', 0)  # trainImage
-    SIFT_detector(img1, img2)
+    # SIFT_detector(img1, img2)
+    print(dense_sift(img1))

@@ -8,10 +8,10 @@ import cv2
 from matplotlib import pyplot as plt
 
 
-MIN_MATCH_COUNT = 3
+MIN_MATCH_COUNT = 1
 MIN_KEY_POINTS = 4
 MATCH_THRESHOLD = 15
-step_size = 15
+step_size = 25
 
 def draw2(img1, kp1, img2, kp2, good, matches_mask):
     draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
@@ -23,8 +23,8 @@ def draw2(img1, kp1, img2, kp2, good, matches_mask):
     good = [good[index] for index in range(0, length) if matches_mask[index]]
     img3 = cv2.drawMatchesKnn(img1, kp1, img2, kp2, good, None, flags=2, singlePointColor=None)
     #img3 = cv2.drawMatchesKnn(img1, kp1, img2, kp2, good, None, flags=2, singlePointColor=None)
-    plt.imshow(img3, 'gray')
-    plt.show()
+    # plt.imshow(img3, 'gray')
+    # plt.show()
 
 
 def calculate_similarity_goodness(good, kp1, kp2):
@@ -58,7 +58,7 @@ def dense_sift(image):
     return kp, des
 
 
-def SIFT_detector(img1 ,img2, gamma_goodness = 1):
+def SIFT_detector(img1 ,img2, gamma_goodness=0.85):
     # img1 size must be not smaller than img2
 
     kp1, des1 = dense_sift(img1)
@@ -67,8 +67,8 @@ def SIFT_detector(img1 ,img2, gamma_goodness = 1):
     # BFMatcher with default params
     bf = cv2.BFMatcher()
     matches = bf.knnMatch(des1, des2, k=2)
-    cv2.imshow("Keypoints1", cv2.drawKeypoints(img1, kp1, None))
-    cv2.imshow("Keypoints2", cv2.drawKeypoints(img2, kp2, None))
+    # cv2.imshow("Keypoints1", cv2.drawKeypoints(img1, kp1, None))
+    # cv2.imshow("Keypoints2", cv2.drawKeypoints(img2, kp2, None))
 
     # Apply ratio test
     good = []

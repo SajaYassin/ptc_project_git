@@ -11,7 +11,20 @@ from matplotlib import pyplot as plt
 MIN_MATCH_COUNT = 3
 MIN_KEY_POINTS = 4
 MATCH_THRESHOLD = 15
-step_size = 25
+step_size = 15
+
+def draw2(img1, kp1, img2, kp2, good, matches_mask):
+    draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
+                       singlePointColor=None,
+                       matchesMask=matches_mask,  # draw only inliers
+                       flags=2)
+
+    length = len(matches_mask) if matches_mask else 0
+    good = [good[index] for index in range(0, length) if matches_mask[index]]
+    img3 = cv2.drawMatchesKnn(img1, kp1, img2, kp2, good, None, flags=2, singlePointColor=None)
+    #img3 = cv2.drawMatchesKnn(img1, kp1, img2, kp2, good, None, flags=2, singlePointColor=None)
+    plt.imshow(img3, 'gray')
+    plt.show()
 
 
 def calculate_similarity_goodness(good, kp1, kp2):
@@ -45,7 +58,7 @@ def dense_sift(image):
     return kp, des
 
 
-def SIFT_detector(img1 ,img2, gamma_goodness = 0.85):
+def SIFT_detector(img1 ,img2, gamma_goodness = 1):
     # img1 size must be not smaller than img2
 
     kp1, des1 = dense_sift(img1)
@@ -54,6 +67,8 @@ def SIFT_detector(img1 ,img2, gamma_goodness = 0.85):
     # BFMatcher with default params
     bf = cv2.BFMatcher()
     matches = bf.knnMatch(des1, des2, k=2)
+    cv2.imshow("Keypoints1", cv2.drawKeypoints(img1, kp1, None))
+    cv2.imshow("Keypoints2", cv2.drawKeypoints(img2, kp2, None))
 
     # Apply ratio test
     good = []
@@ -63,6 +78,7 @@ def SIFT_detector(img1 ,img2, gamma_goodness = 0.85):
             good.append([m])
 
     matches_mask, img_with_objects = find_objects(good, kp1 ,kp2, img1, img2)
+    draw2(img1, kp1, img_with_objects, kp2, good, matches_mask)
     length = len(matches_mask) if matches_mask else 0
     masked_good = [good[index] for index in range(0, length) if matches_mask[index]]
 
@@ -79,7 +95,7 @@ def find_objects(good, kp1 , kp2, img1, img2):
         src_pts = np.float32([kp1[m[0].queryIdx].pt for m in good]).reshape(-1, 1, 2)
         dst_pts = np.float32([kp2[m[0].trainIdx].pt for m in good]).reshape(-1, 1, 2)
 
-        M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 9.0)
         matchesMask = mask.ravel().tolist()
         h, w = img1.shape[:2]
         pts = np.float32([[0, 0], [0, h - 1], [w - 1, h - 1], [w - 1, 0]]).reshape(-1, 1, 2)

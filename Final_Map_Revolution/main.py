@@ -48,7 +48,7 @@ def my_main(old_img_path, new_img_path):
     image_old = cv2.imread(old_img_path)
     image_new = cv2.imread(new_img_path)
     res, source_points = SIFT.SIFT_detector(image_old, image_new)
-
+    cv2.imshow("Result",res)
     # new_cropped = crop_image(res, image_new)
     # plot_colored_changes(img1=image_old, img2=new_cropped, output=colored_image)
     plot_changes_dense_sift(colored_image, source_points)
@@ -61,13 +61,14 @@ def my_main(old_img_path, new_img_path):
 
 if __name__ == "__main__":
     rel_path = "../Workspace/Photos"
+    rel_path = "../../photos"
     # We want to differentiate between the old image and the current status.
     # Therefore: slice the original image and iterate over the slices with the new image.
     # image = cv2.imread('Photos/Possible.jpg')
     # my_main(old_img_path='Photos/empty_mech.png', new_img_path='Photos/marwan_mech.png')
     # my_main(old_img_path='Photos/empty_mech.png', new_img_path='Photos/saja_mech.png')
-    # my_main(old_img_path='Photos/no_marwan.png', new_img_path='Photos/marwan.png')
-    my_main(old_img_path=rel_path+'/office_real.png', new_img_path=rel_path+'/office_synth.png')
+    my_main(old_img_path=rel_path+'/frame36.jpg', new_img_path=rel_path+'/36os.png')
+    # my_main(old_img_path=rel_path+'/office_real.png', new_img_path=rel_path+'/office_synth.png')
     # my_main(old_img_path='Photos/Mor/frame1.jpg', new_img_path='Photos/Mor/frame1s.png')
 
     # my_main(old_img_path='Photos/Mor/frame1s.png', new_img_path='Photos/Mor/frame1.jpg')

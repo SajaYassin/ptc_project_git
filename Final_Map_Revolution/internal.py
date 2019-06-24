@@ -1,12 +1,12 @@
-
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import skimage.segmentation as seg
 import Sift_Algorithm as SIFT
+import argparse
 import os
 from os.path import join
-
+from compare_images import run_comparsion
 
 
 def convert_color_scale(image, channel='Green'):
@@ -61,44 +61,51 @@ def crop_image(source_image, implify_on_image=[]):
     return cropped
 
 
-def my_main(old_img_path, new_img_path):
+
+def get_mask(shape,unchanged_pts):
+    mask = np.ones((shape[0], shape[1]))
+    for x,y in unchanged_pts:
+        mask[x][y] = 0
+    return mask
+
+
+
+
+def main_ransac(old_img_path, new_img_path):
     image_old = cv2.imread(old_img_path)
     image_new = cv2.imread(new_img_path)
-    # the old image suppose the synth contain the new image suppose to be the real image
+    # the old image is suppose to be  the synth contain the new image suppose to be the real image
     # this sift run is in order to find the right perspective and to in order to modify the synth
     # image to suit the new image comparision
-    res, source_points = SIFT.SIFT_detector(image_new, image_old, is_dense=True, step_size=10)
-    # plt.imshow(res), plt.title("res"), plt.show()
+    # f, axarr = plt.subplots(1, 2)
+
+    res, source_points = SIFT.SIFT_detector(image_new, image_old, is_dense=True, step_size=5)
+    plt.imshow(res), plt.title("res"),plt.show()
+    # axarr[0].imshow(res)
 
     # resizing the synthetic image
     new_hight, new_width = image_new.shape[:2]
     old_cropped = crop_image(res, image_old)
     resized_image = cv2.resize(old_cropped, (new_width, new_hight))
-    # plt.imshow(resized_image), plt.title("resized_image"), plt.show()
+    plt.imshow(resized_image), plt.title("resized_image"), plt.show()
+    # axarr[1].imshow(resized_image)
+    # axarr[0].imshow(image_new)
 
-    # sift to find the changes
-    res, source_points = SIFT.SIFT_detector(image_new, resized_image, step_size=25)
-    # plt.imshow(res), plt.title("COLORED"), plt.show()
+    # plt.show()
 
-    # color the found changes on the result image
-    colored_image = image_new.copy()
-    plot_changes_dense_sift(colored_image, source_points, step_size=25)
-    # plt.imshow(colored_image), plt.title("Colored1"), plt.show()
-    # sift to find the changes
-    res, source_points = SIFT.SIFT_detector(resized_image, image_new)
-    # cv2.imshow("Result",res)
 
-    # new_cropped = crop_image(res, image_new)
-    # plot_colored_changes(img1=image_old, img2=new_cropped, output=colored_image)
-    plot_changes_dense_sift(colored_image, source_points, step_size=25)
-    plt.imshow(colored_image), plt.title("Colored2"), plt.show()
-    return resized_image, colored_image
+
+def createDire(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+        print("Directory ", path, " Created ")
+    else:
+        print("Directory ", path, " already exists")
 
 
 def parking_diff(old_img_path, new_img_path, step):
     image_old = cv2.imread(old_img_path)
     image_new = cv2.imread(new_img_path)
-
     # plt.imshow(image_new), plt.title("COLORED"), plt.show()
 
     # no need to resize in this case, assuming the images are in the same size
@@ -124,12 +131,6 @@ def parking_diff(old_img_path, new_img_path, step):
     return  colored_image
 
 
-def createDire(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
-        print("Directory ", path, " Created ")
-    else:
-        print("Directory ", path, " already exists")
 
 
 def run_parking_test(collection_name, step):
@@ -160,39 +161,37 @@ def run_parking_test(collection_name, step):
 
 
 
-if __name__ == "__main__":
-    # rel_path = "../../PTC photos/100GOPRO/"
-    # rel_path_res = "../../parking_res/101G/step20 one vs first"
-
-    # rel_interesting = "../../interesting_images"
-    # rel_mor = "../../images from Mor/"
-    # We want to differentiate between the old image and the current status.
-    # Therefore: slice the original image and iterate over the slices with the new image.
-    # image = cv2.imread('Photos/Possible.jpg')
-    # my_main(old_img_path='Photos/empty_mech.png', new_img_path='Photos/marwan_mech.png')
-    # my_main(old_img_path='Photos/empty_mech.png', new_img_path='Photos/saja_mech.png')
-    # my_main(old_img_path=rel_mor+'/frame36.jpg', new_img_path=rel_mor+'/frame36s.png')
-    # my_main(old_img_path=rel_mor+'/frame195s.png', new_img_path=rel_mor+'/frame195.jpg')
-
-    # resized_image, res = my_main(rel_path + "zoom_in2.jpg",rel_path + "zoom_in1.jpg" )
-    # plt.imshow(res), plt.title("Final Image"), plt.show()
-    # cv2.imwrite(filename=rel_path_res, img=res)
-    # exit(0)
 
 
-    ''' 
-        run synth vs real
-        for index in range(1, 10):
+
+def testing_ransca():
+    rel_path = "../../photos/"
+    for index in range(20, 30):
         frame = 'frame' + str(index)
         frame_path = rel_path + frame
         print("Frame_path: ", frame_path)
-        resized_img, colored_result = my_main(old_img_path=join(frame_path + 's.png'), new_img_path=join(frame_path + '.jpg'))
+        main_ransac(old_img_path=join(frame_path + 's.png'), new_img_path=join(frame_path + '.jpg'))
+
+
+
+
+if __name__ == "__main__":
+    rel_path = "../../PTC photos/100GOPRO/"
+    rel_path_res = "../../parking_res/101G/step20 one vs first"
+
+    # run synth vs real
+    for index in range(1, 2):
+        frame = 'frame' + str(index)
+        frame_path = rel_path + frame
+        print("Frame_path: ", frame_path)
+        resized_img, colored_result = run_comparsion(old_img_path=join(frame_path + 's.png'), new_img_path=join(frame_path + '.jpg'))
         result_path = rel_path_res + frame + '_res.jpg'
         print("res path", result_path)
         cv2.imwrite(filename=result_path,img=colored_result)
         result_path = rel_path_res + frame + '_res_synth.jpg'
         cv2.imwrite(filename=result_path,img=resized_img)
-    '''
+
+    exit(0)
     for step_size in [20, 25, 30]:
         for collection_num in range(100,103):
             run_parking_test(collection_num, step=step_size)

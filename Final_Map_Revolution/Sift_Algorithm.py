@@ -1,7 +1,5 @@
 # reference: https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_feature2d/py_matcher/py_matcher.html
 
-
-
 import numpy as np
 import cv2
 
@@ -49,7 +47,14 @@ def dense_sift(image, step_size=25):
     return kp, des
 
 
-def SIFT_detector(img1 ,img2, gamma_goodness=0.85 ,is_dense=True, step_size=25):
+def get_mask(shape,unchanged_pts):
+    mask = np.ones((shape[0], shape[1]))
+    for x,y in unchanged_pts:
+        mask[x][y] = 0
+    return mask
+
+
+def SIFT_detector(img1 ,img2, gamma_goodness=0.85 ,is_dense=True, step_size=25,max_iters=2000,ransac_reproj_threshold=5.0):
     # img1 size must be not smaller than img2
     # find the keypoints and descriptors with SIFT
     if(is_dense):
@@ -73,17 +78,16 @@ def SIFT_detector(img1 ,img2, gamma_goodness=0.85 ,is_dense=True, step_size=25):
         if m.distance < gamma_goodness*n.distance:
             good.append([m])
 
-    matches_mask, img_with_polylines = ransace_perspective(good, kp1 ,kp2, img1, img2)
+    matches_mask, img_with_polylines = ransace_perspective(good, kp1 ,kp2, img1, img2, max_iters=max_iters,ransac_reproj_threshold=ransac_reproj_threshold)
 
     length = len(matches_mask) if matches_mask else 0
     masked_good = [good[index] for index in range(0, length) if matches_mask[index]]
-    # draw_matches(img1, kp1, img_with_polylines, kp2, masked_good)
+    draw_matches(img1, kp1, img_with_polylines, kp2, masked_good)
     src_pts = [kp1[m[0].queryIdx].pt for m in masked_good]
-
     return img_with_polylines, src_pts
 
 
-def ransace_perspective(good, kp1 , kp2, img1, img2):
+def ransace_perspective(good, kp1 , kp2, img1, img2, max_iters=2000, ransac_reproj_threshold=5.0):
     '''
 
     :param good:
@@ -100,7 +104,7 @@ def ransace_perspective(good, kp1 , kp2, img1, img2):
         src_pts = np.float32([kp1[m[0].queryIdx].pt for m in good]).reshape(-1, 1, 2)
         dst_pts = np.float32([kp2[m[0].trainIdx].pt for m in good]).reshape(-1, 1, 2)
 
-        M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, maxIters=max_iters, ransacReprojThreshold=ransac_reproj_threshold)
         matchesMask = mask.ravel().tolist()
         h, w = img1.shape[:2]
         pts = np.float32([[0, 0], [0, h - 1], [w - 1, h - 1], [w - 1, 0]]).reshape(-1, 1, 2)

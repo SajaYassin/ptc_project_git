@@ -1,6 +1,6 @@
 {
   "settings": {
-    "name": "Site-07-13_2044",
+    "name": "3d_Map_Evolution",
     "currentPage": "index.html",
     "theme": {
       "name": "purity",
@@ -14,7 +14,10 @@
     "versionFirst": "4.10.5",
     "siteFonts": [],
     "uniqCompNum": 25,
-    "versionPublish": "4.10.5"
+    "versionPublish": "4.10.5",
+    "screenshot": "screenshot.png",
+    "favicon": "",
+    "noImageResize": ""
   },
   "pages": {
     "index.html": {
@@ -271,7 +274,7 @@
           "title": "<b>Summary</b>",
           "meta": "By John Smith posted July 30, 2015",
           "text": "<p><b>In this presentation we discussed our program that takes as input a synthetic image (captured by Hololens) and a real image.\n</b></p><p>\n<span style=\"font-size: 1.25rem;\"><b>It decides if the real world has changed and what kind of update is required to update the mesh.&nbsp;</b></span></p><p><b><span style=\"font-size: 1.25rem;\">Thank you very much, i</span><span style=\"font-size: 1.25rem;\">t has been fun!</span></b></p>",
-          "button": "<a data-app-btn=\"true\" class=\"btn btn-lg btn-secondary-outline\" href=\"assets/files/PTC - FinalPresentation.pptx\" data-toolbar=\"-mbrBtnMove\">Check Our Program in Github</a> <a data-app-btn=\"true\" class=\"btn btn-lg btn-secondary-outline\" href=\"assets/files/PTC - FinalPresentation.pptx\" data-toolbar=\"-mbrBtnMove\">and the full presentation for more details</a>",
+          "button": "<a data-app-btn=\"true\" class=\"btn btn-lg btn-secondary-outline\" href=\"https://github.com/SajaYassin/ptc_project_git/tree/master/Final_Map_Revolution\" data-toolbar=\"-mbrBtnMove\">Check Our Program in Github</a> <a data-app-btn=\"true\" class=\"btn btn-lg btn-secondary-outline\" href=\"assets/files/PTC - FinalPresentation.pptx\" data-toolbar=\"-mbrBtnMove\">and the full presentation for more details</a>",
           "alias": "purity/components",
           "_tags": [
             "Theme"
@@ -304,7 +307,7 @@
               "text": "<em>Saja Yassin &amp; Marwan Billan</em>"
             },
             {
-              "authorName": "Supervisors",
+              "authorName": "PTC Supervisors",
               "authorBio": "User",
               "text": "<span style=\"font-size: 22px;\"><i>Eldad Finkelstein &amp; Mordecai Sayag</i></span>"
             },
